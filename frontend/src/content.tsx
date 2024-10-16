@@ -1,34 +1,41 @@
 const uniqueImageSources = new Set<string>()
-const urlToCountMap = new Map<string, number>()
-let counter = 0
+const urlToProbabilityMap = new Map<string, number>()
 
-function extractTweetImages() {
+// Mock function to simulate server response for deepfake detection
+async function mockDeepfakeDetection(_imageUrl: string): Promise<number> {
+  // Simulate API call delay
+  await new Promise((resolve) => setTimeout(resolve, 1500))
+
+  // Generate a random probability between 0 and 1
+  return Math.random()
+}
+
+async function extractTweetImages() {
   const articles = document.querySelectorAll("article")
   const newImageSources: string[] = []
-  articles.forEach((article) => {
+  for (const article of articles) {
     const images = article.querySelectorAll(
       'img[src^="https://pbs.twimg.com/media/"]'
     )
-    images.forEach((img) => {
+    for (const img of images) {
       const imgElement = img as HTMLImageElement
       if (!uniqueImageSources.has(imgElement.src)) {
         uniqueImageSources.add(imgElement.src)
         newImageSources.push(imgElement.src)
-        urlToCountMap.set(imgElement.src, counter++)
-        addLabelToImage(imgElement)
+        await addLabelToImage(imgElement)
       } else if (!imgElement.parentElement?.querySelector(".image-label")) {
         // Re-add label if it's missing
-        addLabelToImage(imgElement)
+        await addLabelToImage(imgElement)
       }
-    })
-  })
+    }
+  }
   return newImageSources
 }
 
-function addLabelToImage(img: HTMLImageElement) {
+async function addLabelToImage(img: HTMLImageElement) {
   if (img.parentElement?.querySelector(".image-label")) return
+
   const label = document.createElement("div")
-  label.textContent = urlToCountMap.get(img.src)?.toString() ?? ""
   label.className = "image-label"
   label.style.cssText = `
     position: absolute;
@@ -43,14 +50,61 @@ function addLabelToImage(img: HTMLImageElement) {
     z-index: 1000;
   `
   img.parentElement?.appendChild(label)
+
+  // Show loading state
+  label.textContent = "Analyzing..."
+
+  // Add a spinning loader
+  const loader = document.createElement("div")
+  loader.className = "loader"
+  loader.style.cssText = `
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    margin-left: 5px;
+    animation: spin 1s linear infinite;
+  `
+  label.appendChild(loader)
+
+  // Add keyframes for the spinning animation
+  if (!document.querySelector("#loader-keyframes")) {
+    const style = document.createElement("style")
+    style.id = "loader-keyframes"
+    style.textContent = `
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    `
+    document.head.appendChild(style)
+  }
+
+  try {
+    const probability = await mockDeepfakeDetection(img.src)
+    urlToProbabilityMap.set(img.src, probability)
+
+    // Update label with the result
+    label.textContent = `Deepfake: ${(probability * 100).toFixed(2)}%`
+  } catch (error) {
+    label.textContent = "Analysis failed"
+  }
 }
 
-function printImageSources() {
-  const newSources = extractTweetImages()
+async function printImageSources() {
+  const newSources = await extractTweetImages()
   if (newSources.length > 0) {
-    console.log("New Tweet Image Sources:")
+    console.log("New Tweet Images (with Deepfake Probabilities):")
     newSources.forEach((src) => {
-      console.log(`${urlToCountMap.get(src)}. ${src}`)
+      const probability = urlToProbabilityMap.get(src)
+      if (probability !== undefined) {
+        console.log(
+          `${src} - Deepfake Probability: ${(probability * 100).toFixed(2)}%`
+        )
+      } else {
+        console.log(`${src} - Analysis pending`)
+      }
     })
   }
 }
