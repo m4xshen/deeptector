@@ -1,30 +1,34 @@
-const uniqueImageSources = new Set()
+const uniqueImageSources = new Set<string>()
+const urlToCountMap = new Map<string, number>()
+let counter = 0
 
 function extractTweetImages() {
   const articles = document.querySelectorAll("article")
-  const newImageSources = []
+  const newImageSources: string[] = []
   articles.forEach((article) => {
     const images = article.querySelectorAll(
       'img[src^="https://pbs.twimg.com/media/"]'
     )
     images.forEach((img) => {
-      if (!uniqueImageSources.has(img.src)) {
-        uniqueImageSources.add(img.src)
-        newImageSources.push(img.src)
-        addLabelToImage(img)
-      } else if (!img.parentElement.querySelector(".image-label")) {
+      const imgElement = img as HTMLImageElement
+      if (!uniqueImageSources.has(imgElement.src)) {
+        uniqueImageSources.add(imgElement.src)
+        newImageSources.push(imgElement.src)
+        urlToCountMap.set(imgElement.src, counter++)
+        addLabelToImage(imgElement)
+      } else if (!imgElement.parentElement?.querySelector(".image-label")) {
         // Re-add label if it's missing
-        addLabelToImage(img)
+        addLabelToImage(imgElement)
       }
     })
   })
   return newImageSources
 }
 
-function addLabelToImage(img) {
-  if (img.parentElement.querySelector(".image-label")) return
+function addLabelToImage(img: HTMLImageElement) {
+  if (img.parentElement?.querySelector(".image-label")) return
   const label = document.createElement("div")
-  label.textContent = "test"
+  label.textContent = urlToCountMap.get(img.src)?.toString() ?? ""
   label.className = "image-label"
   label.style.cssText = `
     position: absolute;
@@ -38,17 +42,15 @@ function addLabelToImage(img) {
     font-family: Inter, sans-serif;
     z-index: 1000;
   `
-  img.parentElement.appendChild(label)
+  img.parentElement?.appendChild(label)
 }
 
 function printImageSources() {
   const newSources = extractTweetImages()
   if (newSources.length > 0) {
     console.log("New Tweet Image Sources:")
-    newSources.forEach((src, index) => {
-      console.log(
-        `${uniqueImageSources.size - newSources.length + index + 1}. ${src}`
-      )
+    newSources.forEach((src) => {
+      console.log(`${urlToCountMap.get(src)}. ${src}`)
     })
   }
 }
