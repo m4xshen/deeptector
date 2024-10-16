@@ -1,27 +1,41 @@
 const uniqueImageSources = new Set<string>()
 const urlToProbabilityMap = new Map<string, number>()
 
-async function realDeepfakeDetection(imageUrl: string): Promise<number> {
+async function realAIGeneratedDetection(imageUrl: string): Promise<number> {
+  if (urlToProbabilityMap.has(imageUrl)) {
+    return urlToProbabilityMap.get(imageUrl)!
+  }
+
   try {
-    const response = await fetch(imageUrl)
-    const blob = await response.blob()
-    const formData = new FormData()
+    const apiUrl = new URL("https://api.sightengine.com/1.0/check.json")
+    apiUrl.searchParams.append("models", "genai")
+    apiUrl.searchParams.append("api_user", process.env.PLASMO_PUBLIC_API_USER)
+    apiUrl.searchParams.append(
+      "api_secret",
+      process.env.PLASMO_PUBLIC_API_SECRET
+    )
+    apiUrl.searchParams.append("url", imageUrl)
 
-    formData.append("img", blob, "image.jpg")
+    const response = await fetch(apiUrl.toString())
 
-    const result = await fetch("http://localhost:3000/inference", {
-      method: "POST",
-      body: formData
-    })
-
-    if (!result.ok) {
-      throw new Error(`HTTP error! status: ${result.status}`)
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
     }
 
-    const data = await result.json()
-    return data[0].output[0]
+    const data = await response.json()
+
+    if (data.status !== "success") {
+      throw new Error("API request failed")
+    }
+
+    const probability = data.type.ai_generated
+
+    // Store the result in the map
+    urlToProbabilityMap.set(imageUrl, probability)
+
+    return probability
   } catch (error) {
-    console.error("Error in deepfake detection:", error)
+    console.error("Error in AI generated detection:", error)
     throw error
   }
 }
@@ -91,9 +105,8 @@ async function addLabelToImage(img: HTMLImageElement) {
   }
 
   try {
-    const probability = await realDeepfakeDetection(img.src)
-    urlToProbabilityMap.set(img.src, probability)
-    label.textContent = `Deepfake: ${(probability * 100).toFixed(2)}%`
+    const probability = await realAIGeneratedDetection(img.src)
+    label.textContent = `AI Generated: ${(probability * 100).toFixed(2)}%`
   } catch (error) {
     label.textContent = "Analysis failed"
   }
@@ -102,12 +115,12 @@ async function addLabelToImage(img: HTMLImageElement) {
 async function printImageSources() {
   const newSources = await extractTweetImages()
   if (newSources.length > 0) {
-    console.log("New Tweet Images (with Deepfake Probabilities):")
+    console.log("New Tweet Images (with AI Generated Probabilities):")
     newSources.forEach((src) => {
       const probability = urlToProbabilityMap.get(src)
       if (probability !== undefined) {
         console.log(
-          `${src} - Deepfake Probability: ${(probability * 100).toFixed(2)}%`
+          `${src} - AI Generated Probability: ${(probability * 100).toFixed(2)}%`
         )
       } else {
         console.log(`${src} - Analysis pending`)
