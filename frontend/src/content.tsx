@@ -1,13 +1,29 @@
 const uniqueImageSources = new Set<string>()
 const urlToProbabilityMap = new Map<string, number>()
 
-// Mock function to simulate server response for deepfake detection
-async function mockDeepfakeDetection(_imageUrl: string): Promise<number> {
-  // Simulate API call delay
-  await new Promise((resolve) => setTimeout(resolve, 1500))
+async function realDeepfakeDetection(imageUrl: string): Promise<number> {
+  try {
+    const response = await fetch(imageUrl)
+    const blob = await response.blob()
+    const formData = new FormData()
 
-  // Generate a random probability between 0 and 1
-  return Math.random()
+    formData.append("img", blob, "image.jpg")
+
+    const result = await fetch("http://localhost:3000/inference", {
+      method: "POST",
+      body: formData
+    })
+
+    if (!result.ok) {
+      throw new Error(`HTTP error! status: ${result.status}`)
+    }
+
+    const data = await result.json()
+    return data[0].output[0]
+  } catch (error) {
+    console.error("Error in deepfake detection:", error)
+    throw error
+  }
 }
 
 async function extractTweetImages() {
@@ -24,7 +40,6 @@ async function extractTweetImages() {
         newImageSources.push(imgElement.src)
         await addLabelToImage(imgElement)
       } else if (!imgElement.parentElement?.querySelector(".image-label")) {
-        // Re-add label if it's missing
         await addLabelToImage(imgElement)
       }
     }
@@ -34,7 +49,6 @@ async function extractTweetImages() {
 
 async function addLabelToImage(img: HTMLImageElement) {
   if (img.parentElement?.querySelector(".image-label")) return
-
   const label = document.createElement("div")
   label.className = "image-label"
   label.style.cssText = `
@@ -50,11 +64,7 @@ async function addLabelToImage(img: HTMLImageElement) {
     z-index: 1000;
   `
   img.parentElement?.appendChild(label)
-
-  // Show loading state
   label.textContent = "Analyzing..."
-
-  // Add a spinning loader
   const loader = document.createElement("div")
   loader.className = "loader"
   loader.style.cssText = `
@@ -69,7 +79,6 @@ async function addLabelToImage(img: HTMLImageElement) {
   `
   label.appendChild(loader)
 
-  // Add keyframes for the spinning animation
   if (!document.querySelector("#loader-keyframes")) {
     const style = document.createElement("style")
     style.id = "loader-keyframes"
@@ -82,10 +91,8 @@ async function addLabelToImage(img: HTMLImageElement) {
   }
 
   try {
-    const probability = await mockDeepfakeDetection(img.src)
+    const probability = await realDeepfakeDetection(img.src)
     urlToProbabilityMap.set(img.src, probability)
-
-    // Update label with the result
     label.textContent = `Deepfake: ${(probability * 100).toFixed(2)}%`
   } catch (error) {
     label.textContent = "Analysis failed"
@@ -127,7 +134,7 @@ function initializeObserver() {
     console.log(
       "Timeline not found. Make sure you're on the Twitter home page."
     )
-    setTimeout(initializeObserver, 1000) // Retry after 1 second
+    setTimeout(initializeObserver, 1000)
   }
 }
 
