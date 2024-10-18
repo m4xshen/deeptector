@@ -18,7 +18,7 @@ export interface FactCheckResponse {
 
 export async function checkClaim(
   claim: string
-): Promise<FactCheckResponse | string> {
+): Promise<FactCheckResponse | null> {
   const apiKey = process.env.PLASMO_PUBLIC_GOOGLE_API_KEY
   const baseUrl = "https://factchecktools.googleapis.com/v1alpha1/claims:search"
   const url = new URL(baseUrl)
@@ -31,12 +31,9 @@ export async function checkClaim(
       throw new Error(`HTTP error! status: ${response.status}`)
     }
     const data: FactCheckResponse = await response.json()
-    console.log(data)
+    // console.log(data)
     return data
   } catch (error) {
-    if (error instanceof Error) {
-      return `Error: ${error.message}`
-    }
-    return "An unknown error occurred"
+    return null
   }
 }

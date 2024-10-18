@@ -1,4 +1,5 @@
 import cssText from "data-text:~style.css"
+import Markdown from "markdown-to-jsx"
 
 import "~style.css"
 
@@ -72,7 +73,7 @@ const PlasmoOverlay = () => {
     <div
       className={`fixed top-5 right-5 bg-white text-black rounded-lg transition-all duration-300 ease-in-out ${
         isExpanded
-          ? "w-80 h-[80vh] p-4 overflow-auto"
+          ? "w-[31rem] h-[80vh] p-4 overflow-auto"
           : "w-12 h-12 cursor-pointer"
       }`}
       onClick={!isExpanded ? toggleExpand : undefined}>
@@ -95,7 +96,7 @@ const PlasmoOverlay = () => {
                   <div key={index} className="mb-4">
                     <div className="font-semibold">Claim: {claim.text}</div>
                     {claim.claimReview.map((review, reviewIndex) => (
-                      <div key={reviewIndex} className="ml-4 mt-2">
+                      <div key={reviewIndex} className="mt-2">
                         <div>
                           Publisher:{" "}
                           {review.publisher.name || review.publisher.site}
@@ -116,9 +117,8 @@ const PlasmoOverlay = () => {
                   </div>
                 ))}
               {streamingSummary && (
-                <div className="mt-4 border-t pt-2">
-                  <strong className="font-semibold">Summary:</strong>{" "}
-                  {streamingSummary}
+                <div className="mt-4 border-t pt-2 prose">
+                  <Markdown>{streamingSummary}</Markdown>
                 </div>
               )}
             </>

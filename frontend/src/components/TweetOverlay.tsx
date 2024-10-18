@@ -1,7 +1,11 @@
 import { streamText } from "ai"
 import { useState } from "react"
 
-import { checkClaim, type FactCheckResponse } from "~utils/factCheck"
+import {
+  checkClaim,
+  type Claim,
+  type FactCheckResponse
+} from "~utils/factCheck"
 import { openai } from "~utils/openai"
 import { extractTweetText } from "~utils/tweet"
 
@@ -24,22 +28,26 @@ export default function TweetOverlay({
     setIsExpanded(true)
     onResetSummary()
     setIsStreaming(true)
-
     const tweetText = extractTweetText(tweetElement)
     const result = await checkClaim(tweetText)
-    if (Object.keys(result).length === 0) {
+    if (!result || result.claims.length === 0) {
       onFactCheck("No fact check available")
       setIsStreaming(false)
       return
     }
     onFactCheck(result)
 
+    const allArticles = await extractAllArticles(result.claims)
+
+    const combinedContent = allArticles.join("\n\n")
+
     let summary = ""
     const { textStream } = await streamText({
       model: openai("gpt-4"),
-      prompt: "Summarize this tweet in one sentence: " + tweetText
+      prompt:
+        "Summarize the misleading or false claims in articles in bullet point, focusing on inaccuracies, misrepresented facts, or biased information. Result should be raw markdown string within each bullet point within 20 words. Articles: " +
+        combinedContent
     })
-
     for await (const textPart of textStream) {
       summary += textPart
       onStreamingSummary(summary)
@@ -57,4 +65,34 @@ export default function TweetOverlay({
       </button>
     </div>
   )
+}
+
+async function extractAllArticles(claims: Claim[]): Promise<string[]> {
+  const articlePromises = claims.flatMap((claim) =>
+    claim.claimReview.map((review) => extractContent(review.url))
+  )
+
+  const articles = await Promise.all(articlePromises)
+  return articles
+    .map((article) => article.content)
+    .filter((content) => content !== "")
+}
+
+async function extractContent(url: string): Promise<{ content: string }> {
+  try {
+    const response = await fetch("https://deeptector.onrender.com/extract", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ url: url })
+    })
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    return await response.json()
+  } catch (error) {
+    console.error("Error extracting content from", url, ":", error)
+    return { content: "" }
+  }
 }
