@@ -10,6 +10,7 @@ import React, { useEffect, useState } from "react"
 import { createRoot } from "react-dom/client"
 
 import { Card, CardHeader } from "./components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs"
 
 export const getStyle = () => {
   const style = document.createElement("style")
@@ -84,54 +85,66 @@ const PlasmoOverlay = () => {
       }`}
       onClick={!isExpanded ? toggleExpand : undefined}>
       {isExpanded ? (
-        <>
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-bold">事實查核</h2>
-            <button
-              onClick={toggleExpand}
-              className="text-gray-500 hover:text-gray-700">
-              <Close />
-            </button>
-          </div>
-          {typeof factCheckResult === "string" ? (
-            <div>{factCheckResult}</div>
-          ) : (
-            <div className="flex flex-col gap-2">
-              {factCheckResult.claims &&
-                factCheckResult.claims.map((claim, index) => (
-                  <Card
-                    key={index}
-                    onClick={() =>
-                      window.open(claim.claimReview[0].url, "_blank")
-                    }
-                    className="cursor-pointer hover:bg-gray-100 transition-colors duration-200">
-                    <CardHeader className="flex flex-row items-center gap-5">
-                      <img
-                        src={getOgImage(claim.claimReview[0].url)}
-                        className="h-12 rounded border-black"
-                      />
-                      <div className="flex flex-col">
-                        <div>
-                          查核單位:{" "}
-                          {claim.claimReview[0].publisher.name ||
-                            claim.claimReview[0].publisher.site}
-                        </div>
-                        <div>
-                          結果 :{" "}
-                          <strong>{claim.claimReview[0].textualRating}</strong>
-                        </div>
-                      </div>
-                    </CardHeader>
-                  </Card>
-                ))}
-              {streamingSummary && (
-                <div className="mt-4 border-t pt-2 prose">
-                  <Markdown>{streamingSummary}</Markdown>
+        <div className="flex flex-col gap-2">
+          <button
+            onClick={toggleExpand}
+            className="ml-auto text-gray-500 hover:text-gray-700">
+            <Close />
+          </button>
+          <Tabs defaultValue="fact-check">
+            <TabsList className="w-full">
+              <TabsTrigger value="fact-check" className="w-1/2">
+                事實查核
+              </TabsTrigger>
+              <TabsTrigger value="image-check" className="w-1/2">
+                圖片查核
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="fact-check">
+              {typeof factCheckResult === "string" ? (
+                <div>{factCheckResult}</div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {factCheckResult.claims &&
+                    factCheckResult.claims.map((claim, index) => (
+                      <Card
+                        key={index}
+                        onClick={() =>
+                          window.open(claim.claimReview[0].url, "_blank")
+                        }
+                        className="cursor-pointer hover:bg-gray-100 transition-colors duration-200">
+                        <CardHeader className="flex flex-row items-center gap-5">
+                          <img
+                            src={getOgImage(claim.claimReview[0].url)}
+                            className="h-12 rounded border-black"
+                          />
+                          <div className="flex flex-col">
+                            <div>
+                              查核單位:{" "}
+                              {claim.claimReview[0].publisher.name ||
+                                claim.claimReview[0].publisher.site}
+                            </div>
+                            <div>
+                              結果 :{" "}
+                              <strong>
+                                {claim.claimReview[0].textualRating}
+                              </strong>
+                            </div>
+                          </div>
+                        </CardHeader>
+                      </Card>
+                    ))}
+                  {streamingSummary && (
+                    <div className="mt-4 border-t pt-2 prose">
+                      <Markdown>{streamingSummary}</Markdown>
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
-          )}
-        </>
+            </TabsContent>
+            <TabsContent value="image-check">hihi</TabsContent>
+          </Tabs>
+        </div>
       ) : (
         <div className="w-full h-full rounded-lg bg-white flex items-center justify-center">
           <MagnifyingGlass />
