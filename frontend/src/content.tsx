@@ -1,4 +1,3 @@
-import { createOpenAI } from "@ai-sdk/openai"
 import { streamText } from "ai"
 import cssText from "data-text:~style.css"
 
@@ -8,6 +7,7 @@ import React, { useEffect, useState } from "react"
 import { createRoot } from "react-dom/client"
 
 import { checkClaim, type FactCheckResponse } from "~utils/factCheck"
+import { openai } from "~utils/openai"
 import { extractTweetText } from "~utils/tweet"
 
 export const getStyle = () => {
@@ -15,10 +15,6 @@ export const getStyle = () => {
   style.textContent = cssText
   return style
 }
-
-const openai = createOpenAI({
-  apiKey: process.env.PLASMO_PUBLIC_OPENAI_SECRET_KEY
-})
 
 function TweetOverlay({
   tweetElement,
