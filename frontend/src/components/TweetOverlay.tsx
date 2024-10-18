@@ -1,13 +1,12 @@
-import { streamText } from "ai"
-import { useState } from "react"
-
 import {
   checkClaim,
   type Claim,
   type FactCheckResponse
-} from "~utils/factCheck"
-import { openai } from "~utils/openai"
-import { extractTweetText } from "~utils/tweet"
+} from "@/utils/factCheck"
+import { openai } from "@/utils/openai"
+import { extractTweetText } from "@/utils/tweet"
+import { streamText } from "ai"
+import { useState } from "react"
 
 export default function TweetOverlay({
   setIsExpanded,

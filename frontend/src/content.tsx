@@ -1,14 +1,15 @@
-import cssText from "data-text:~style.css"
+import cssText from "data-text:@/style.css"
 import Markdown from "markdown-to-jsx"
 
-import "~style.css"
+import "@/style.css"
 
+import { Close, MagnifyingGlass } from "@/components/Icons"
+import TweetOverlay from "@/components/TweetOverlay"
+import { type FactCheckResponse } from "@/utils/factCheck"
 import React, { useEffect, useState } from "react"
 import { createRoot } from "react-dom/client"
 
-import { Close, MagnifyingGlass } from "~components/Icons"
-import TweetOverlay from "~components/TweetOverlay"
-import { type FactCheckResponse } from "~utils/factCheck"
+import { Card, CardHeader } from "./components/ui/card"
 
 export const getStyle = () => {
   const style = document.createElement("style")
@@ -69,6 +70,11 @@ const PlasmoOverlay = () => {
     setIsExpanded(!isExpanded)
   }
 
+  const getOgImage = (url: string) => {
+    const domain = new URL(url).hostname
+    return `https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://${domain}&size=128`
+  }
+
   return (
     <div
       className={`fixed top-5 right-5 bg-white text-black rounded-lg transition-all duration-300 ease-in-out ${
@@ -90,38 +96,40 @@ const PlasmoOverlay = () => {
           {typeof factCheckResult === "string" ? (
             <div>{factCheckResult}</div>
           ) : (
-            <>
+            <div className="flex flex-col gap-2">
               {factCheckResult.claims &&
                 factCheckResult.claims.map((claim, index) => (
-                  <div key={index} className="mb-4">
-                    <div className="font-semibold">Claim: {claim.text}</div>
-                    {claim.claimReview.map((review, reviewIndex) => (
-                      <div key={reviewIndex} className="mt-2">
+                  <Card
+                    key={index}
+                    onClick={() =>
+                      window.open(claim.claimReview[0].url, "_blank")
+                    }
+                    className="cursor-pointer hover:bg-gray-100 transition-colors duration-200">
+                    <CardHeader className="flex flex-row items-center gap-5">
+                      <img
+                        src={getOgImage(claim.claimReview[0].url)}
+                        className="h-12 rounded border-black"
+                      />
+                      <div className="flex flex-col">
                         <div>
                           Publisher:{" "}
-                          {review.publisher.name || review.publisher.site}
+                          {claim.claimReview[0].publisher.name ||
+                            claim.claimReview[0].publisher.site}
                         </div>
-                        <div>Rating: {review.textualRating}</div>
                         <div>
-                          Date: {new Date(review.reviewDate).toDateString()}
+                          Rating:{" "}
+                          <strong>{claim.claimReview[0].textualRating}</strong>
                         </div>
-                        <a
-                          href={review.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-500 hover:underline">
-                          Read more
-                        </a>
                       </div>
-                    ))}
-                  </div>
+                    </CardHeader>
+                  </Card>
                 ))}
               {streamingSummary && (
                 <div className="mt-4 border-t pt-2 prose">
                   <Markdown>{streamingSummary}</Markdown>
                 </div>
               )}
-            </>
+            </div>
           )}
         </>
       ) : (
