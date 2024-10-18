@@ -32,8 +32,9 @@ export default function TweetOverlay({
     setIsStreaming(true)
     const tweetText = extractTweetText(tweetElement)
     const result = await checkClaim(tweetText)
-    if (!result || result.claims.length === 0) {
-      onFactCheck("No fact check available")
+
+    if (!result || Object.keys(result).length === 0) {
+      onFactCheck("沒有找到相關的事實查核資料。")
       setIsStreaming(false)
       return
     }

@@ -30,8 +30,7 @@ export async function checkClaim(
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
-    const data: FactCheckResponse = await response.json()
-    // console.log(data)
+    const data = await response.json()
     return data
   } catch (error) {
     return null
