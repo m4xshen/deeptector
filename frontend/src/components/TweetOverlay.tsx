@@ -6,7 +6,10 @@ import {
 import { openai } from "@/utils/openai"
 import { extractTweetText } from "@/utils/tweet"
 import { streamText } from "ai"
+import { Loader2 } from "lucide-react"
 import { useState } from "react"
+
+import { Button } from "./ui/button"
 
 export default function TweetOverlay({
   setIsExpanded,
@@ -44,7 +47,7 @@ export default function TweetOverlay({
     const { textStream } = await streamText({
       model: openai("gpt-4"),
       prompt:
-        "Summarize the misleading or false claims in articles in bullet point, focusing on inaccuracies, misrepresented facts, or biased information. Result should be raw markdown string within each bullet point within 20 words. Articles: " +
+        "請使用繁體中文回答 Summarize the misleading or false claims in articles in 3 bullet point, focusing on inaccuracies, misrepresented facts, or biased information. Result should be raw markdown string within each bullet point should be a short sentence within 20 words. Articles: " +
         combinedContent
     })
     for await (const textPart of textStream) {
@@ -56,12 +59,16 @@ export default function TweetOverlay({
 
   return (
     <div className="absolute top-1 right-1 flex flex-col items-end">
-      <button
-        className="p-1 rounded-md bg-white text-black mb-2"
+      <Button
         onClick={handleFactCheck}
-        disabled={isStreaming}>
-        {isStreaming ? "Summarizing..." : "Fact check"}
-      </button>
+        disabled={isStreaming}
+        variant="outline">
+        {isStreaming ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          "事實查核"
+        )}
+      </Button>
     </div>
   )
 }

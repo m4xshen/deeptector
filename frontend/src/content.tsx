@@ -86,7 +86,7 @@ const PlasmoOverlay = () => {
       {isExpanded ? (
         <>
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-bold">Fact Check Results</h2>
+            <h2 className="text-lg font-bold">事實查核</h2>
             <button
               onClick={toggleExpand}
               className="text-gray-500 hover:text-gray-700">
@@ -112,12 +112,12 @@ const PlasmoOverlay = () => {
                       />
                       <div className="flex flex-col">
                         <div>
-                          Publisher:{" "}
+                          查核單位:{" "}
                           {claim.claimReview[0].publisher.name ||
                             claim.claimReview[0].publisher.site}
                         </div>
                         <div>
-                          Rating:{" "}
+                          結果 :{" "}
                           <strong>{claim.claimReview[0].textualRating}</strong>
                         </div>
                       </div>
