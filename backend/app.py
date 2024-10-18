@@ -1,10 +1,11 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import requests
 from bs4 import BeautifulSoup
 from newspaper import Article
 import logging
+
 
 app = FastAPI()
 
@@ -60,7 +61,8 @@ def get_raw_html(url):
         return None
 
 @app.post("/extract")
-async def extract_content(input: UrlInput):
+async def extract_content(input: UrlInput, response: Response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
     url = input.url
     logger.info(f"嘗試提取 URL: {url}")
     try:
