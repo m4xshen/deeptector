@@ -6,11 +6,13 @@ import { openai } from "~utils/openai"
 import { extractTweetText } from "~utils/tweet"
 
 export default function TweetOverlay({
+  setIsExpanded,
   tweetElement,
   onFactCheck,
   onStreamingSummary,
   onResetSummary
 }: {
+  setIsExpanded: (isExpanded: boolean) => void
   tweetElement: Element
   onFactCheck: (result: FactCheckResponse | string) => void
   onStreamingSummary: (summary: string) => void
@@ -19,7 +21,8 @@ export default function TweetOverlay({
   const [isStreaming, setIsStreaming] = useState(false)
 
   const handleFactCheck = async () => {
-    onResetSummary() // Reset the summary before starting a new fact-check
+    setIsExpanded(true)
+    onResetSummary()
     setIsStreaming(true)
 
     const tweetText = extractTweetText(tweetElement)
@@ -47,7 +50,7 @@ export default function TweetOverlay({
   return (
     <div className="absolute top-1 right-1 flex flex-col items-end">
       <button
-        className="p-1 rounded-md bg-blue-500 text-white mb-2"
+        className="p-1 rounded-md bg-white text-black mb-2"
         onClick={handleFactCheck}
         disabled={isStreaming}>
         {isStreaming ? "Summarizing..." : "Fact check"}
