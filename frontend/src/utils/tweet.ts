@@ -10,3 +10,10 @@ export const extractTweetText = (tweetElement: Element): string => {
   }
   return ""
 }
+
+export const extractTweetImages = (tweetElement: Element): string[] => {
+  const imageElements = tweetElement.querySelectorAll('img[alt="Image"]')
+  return Array.from(imageElements)
+    .map((img) => img.getAttribute("src"))
+    .filter((src): src is string => src !== null)
+}

@@ -27,6 +27,7 @@ const PlasmoOverlay = () => {
   const [isExpanded, setIsExpanded] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isStreaming, setIsStreaming] = useState(false)
+  const [tweetImages, setTweetImages] = useState<string[]>([])
 
   const resetSummary = () => {
     setStreamingSummary("")
@@ -50,6 +51,7 @@ const PlasmoOverlay = () => {
             onResetSummary={resetSummary}
             setIsLoading={setIsLoading}
             setIsStreaming={setIsStreaming}
+            onExtractImages={(images) => setTweetImages(images)}
           />
         )
       })
@@ -169,7 +171,22 @@ const PlasmoOverlay = () => {
                 </div>
               )}
             </TabsContent>
-            <TabsContent value="image-check">hihi</TabsContent>
+            <TabsContent value="image-check">
+              {tweetImages.length > 0 ? (
+                <div className="grid grid-cols-2 gap-4">
+                  {tweetImages.map((image, index) => (
+                    <img
+                      key={index}
+                      src={image}
+                      alt={`Tweet image ${index + 1}`}
+                      className="w-full h-auto rounded-lg"
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-4">沒有圖片</div>
+              )}
+            </TabsContent>
           </Tabs>
         </div>
       ) : (
