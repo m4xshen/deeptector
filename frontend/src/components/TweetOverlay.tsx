@@ -88,13 +88,16 @@ async function extractAllArticles(claims: Claim[]): Promise<string[]> {
 
 async function extractContent(url: string): Promise<{ content: string }> {
   try {
-    const response = await fetch("https://deeptector.onrender.com/extract", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ url: url })
-    })
+    const response = await fetch(
+      "https://deeptector.onrender.com/api/extract",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ url: url })
+      }
+    )
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
