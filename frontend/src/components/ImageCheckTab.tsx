@@ -20,6 +20,7 @@ export default function ImageCheckCarousel({
 
   useEffect(() => {
     ;(async () => {
+      tweetVideo.currentTime = 0
       const stream = tweetVideo.captureStream()
       const blob = await captureFirstFrame(stream)
       const deepfakeResult = await checkDeepfake(blob)
@@ -126,9 +127,7 @@ export default function ImageCheckCarousel({
         </div>
       </>
       {videoDeepfakeResult && (
-        <div className="mt-4">
-          這個影片有 <strong>{videoDeepfakeResult * 100}%</strong> 是 deepfake
-        </div>
+        <DeepfakeContentDetector percentage={videoDeepfakeResult * 100} />
       )}
     </div>
   )
@@ -159,10 +158,36 @@ const AIContentDetector = ({ percentage }) => {
   )
 }
 
+const DeepfakeContentDetector = ({ percentage }) => {
+  return (
+    <div className="flex flex-col gap-3 w-full max-w-md mx-auto">
+      <div className="flex justify-between">
+        <span className="text-sm font-medium">真實</span>
+        <span className="text-sm font-medium">Deepfake</span>
+      </div>
+      <Progress value={percentage} className="h-5" />
+      {percentage >= 50 ? (
+        <Alert className="bg-red-50 border-red-200">
+          <AlertDescription>
+            有 <strong>{percentage.toFixed(0)}%</strong> 的機率是 deepfake
+          </AlertDescription>
+        </Alert>
+      ) : (
+        <Alert className="bg-green-50 border-green-200">
+          <AlertDescription>
+            僅有 <strong>{percentage.toFixed(0)}%</strong> 的機率是 deepfake
+          </AlertDescription>
+        </Alert>
+      )}
+    </div>
+  )
+}
+
 function captureFirstFrame(stream: MediaStream) {
   return new Promise((resolve, reject) => {
     const video = document.createElement("video")
     video.srcObject = stream
+
     video.onloadedmetadata = () => {
       video.play()
       video.pause()
