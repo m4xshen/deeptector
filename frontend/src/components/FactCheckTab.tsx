@@ -26,7 +26,7 @@ export default function FactCheckTab({
   streamingSummary: string
 }) {
   if (typeof factCheckResult === "string") {
-    return <div>{factCheckResult}</div>
+    return <div className="text-center mt-10">{factCheckResult}</div>
   }
 
   return (
