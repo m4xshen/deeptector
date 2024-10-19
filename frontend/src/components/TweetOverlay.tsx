@@ -54,9 +54,9 @@ export default function TweetOverlay({
 
     let streamingSummary = ""
     const { textStream } = await streamText({
-      model: openai("gpt-4"),
+      model: openai("gpt-4o-mini"),
       prompt:
-        "請使用繁體中文回答 Summarize the misleading or false claims in articles in 3 bullet point, focusing on inaccuracies, misrepresented facts, or biased information. Result should be raw markdown string within each bullet point should be a short sentence within 20 words. Articles: " +
+        "請使用繁體中文回答 but for proper noun just use English. Summarize the misleading or false claims in articles in 3 bullet point, focusing on inaccuracies, misrepresented facts, or biased information. Result should be raw markdown string within each bullet point should be a short sentence within 20 words. Articles: " +
         combinedContent
     })
     for await (const textPart of textStream) {

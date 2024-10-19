@@ -59,7 +59,7 @@ export async function checkClaim(
   // If no claims found, use AI to reformulate the query
   console.log("No claims found with original content. Trying AI reformulation.")
   const { text } = await generateText({
-    model: openai("gpt-4"),
+    model: openai("gpt-4o"),
     prompt: `I'll provide you with the content of a tweet. Please extract the main claim or factual assertion from this tweet and rephrase it as a simple, neutral statement. This statement should be concise and focus on the core factual content, omitting any opinions or rhetorical elements. The goal is to create a clear, searchable phrase that captures the essence of the claim for fact-checking purposes. Provide only the rephrased statement, without any additional commentary or quotation marks. No matter what the language of the tweet is, please provide the rephrased statement in English. Here is the tweet content:
 
 ${tweetContent}

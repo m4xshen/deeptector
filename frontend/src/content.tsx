@@ -136,7 +136,7 @@ const PlasmoOverlay = () => {
                         onClick={() =>
                           window.open(claim.claimReview[0].url, "_blank")
                         }
-                        className="cursor-pointer hover:bg-gray-100 transition-colors duration-200 h-24">
+                        className="cursor-pointer hover:bg-gray-100 transition-colors duration-200 min-h-24">
                         <CardHeader className="flex flex-row items-center gap-5">
                           <img
                             src={getOgImage(claim.claimReview[0].url)}
