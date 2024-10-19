@@ -10,6 +10,7 @@ import { type FactCheckResponse } from "@/utils/factCheck"
 import React, { useEffect, useState } from "react"
 import { createRoot } from "react-dom/client"
 
+import ImageCheckTab from "./components/ImageCheckTab"
 import { Card, CardHeader } from "./components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs"
 
@@ -172,20 +173,7 @@ const PlasmoOverlay = () => {
               )}
             </TabsContent>
             <TabsContent value="image-check">
-              {tweetImages.length > 0 ? (
-                <div className="grid grid-cols-2 gap-4">
-                  {tweetImages.map((image, index) => (
-                    <img
-                      key={index}
-                      src={image}
-                      alt={`Tweet image ${index + 1}`}
-                      className="w-full h-auto rounded-lg"
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-4">沒有圖片</div>
-              )}
+              <ImageCheckTab tweetImages={tweetImages} />
             </TabsContent>
           </Tabs>
         </div>
