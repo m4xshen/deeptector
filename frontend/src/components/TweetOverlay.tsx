@@ -6,6 +6,7 @@ import {
 } from "@/utils/factCheck"
 import { openai } from "@/utils/openai"
 import {
+  extractTweetId,
   extractTweetImages,
   extractTweetText,
   extractTweetVideos
@@ -47,6 +48,9 @@ export default function TweetOverlay({
     const tweetText = extractTweetText(tweetElement)
     const tweetImages = extractTweetImages(tweetElement)
     const imageCheckResult = []
+
+    // const tweetId = extractTweetId(tweetElement)
+    // console.log("Tweet ID:", tweetId)
 
     Promise.all(
       tweetImages.map(async (image, _) => {

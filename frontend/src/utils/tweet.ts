@@ -45,3 +45,20 @@ export const extractTweetImages = (tweetElement: Element): string[] => {
 export const extractTweetVideos = (tweetElement: Element): Element => {
   return tweetElement.querySelector("video")
 }
+
+export const extractTweetId = (tweetElement: Element): string => {
+  const analyticsLink = tweetElement.querySelector(
+    'a[href*="/status/"][href$="/analytics"]'
+  )
+
+  if (analyticsLink) {
+    const href = analyticsLink.getAttribute("href")
+    const matches = href?.match(/\/status\/(\d+)\/analytics/)
+
+    if (matches && matches[1]) {
+      return matches[1]
+    }
+  }
+
+  return ""
+}
