@@ -2,7 +2,7 @@ import { generateText } from "ai"
 
 import { openai } from "./openai"
 
-export interface Claim {
+interface Claim {
   text: string
   claimReview: Array<{
     publisher: {
@@ -98,5 +98,39 @@ export async function checkDeepfake(imageBlob) {
   } catch (error) {
     console.error("Error calling Sightengine API:", error)
     throw error
+  }
+}
+
+export async function extractAllArticles(claims: Claim[]): Promise<string[]> {
+  const articlePromises = claims.flatMap((claim) =>
+    claim.claimReview.map((review) => extractContent(review.url))
+  )
+  const articles = await Promise.all(articlePromises)
+  return articles
+    .map((article) => article.content)
+    .filter((content) => content !== "")
+}
+
+export async function extractContent(
+  url: string
+): Promise<{ content: string }> {
+  try {
+    const response = await fetch(
+      "https://deeptector.onrender.com/api/extract",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ url: url })
+      }
+    )
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    return await response.json()
+  } catch (error) {
+    console.error("Error extracting content from", url, ":", error)
+    return { content: "" }
   }
 }
