@@ -28,8 +28,9 @@ const PlasmoOverlay = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [isStreaming, setIsStreaming] = useState(false)
   const [imageCheckResult, setImageCheckResult] = useState([])
-
-  const [tweetVideo, setTweetVideo] = useState<HTMLVideoElement | null>(null)
+  const [videoDeepfakeResult, setVideoDeepfakeResult] = useState<number | null>(
+    null
+  )
 
   const resetSummary = () => {
     setStreamingSummary("")
@@ -54,7 +55,7 @@ const PlasmoOverlay = () => {
             setIsLoading={setIsLoading}
             setIsStreaming={setIsStreaming}
             setImageCheckResult={setImageCheckResult}
-            onExtractVideo={(video) => setTweetVideo(video)}
+            setVideoDeepfakeResult={setVideoDeepfakeResult}
           />
         )
       })
@@ -103,13 +104,13 @@ const PlasmoOverlay = () => {
             className="ml-auto text-gray-500 hover:text-gray-700">
             <Close />
           </button>
-          <Tabs defaultValue="fact-check">
+          <Tabs defaultValue="image-check">
             <TabsList className="w-full">
-              <TabsTrigger value="fact-check" className="w-1/2">
-                事實查核
-              </TabsTrigger>
               <TabsTrigger value="image-check" className="w-1/2">
                 圖片查核
+              </TabsTrigger>
+              <TabsTrigger value="fact-check" className="w-1/2">
+                事實查核
               </TabsTrigger>
             </TabsList>
             <TabsContent value="fact-check">
@@ -125,8 +126,8 @@ const PlasmoOverlay = () => {
             </TabsContent>
             <TabsContent value="image-check">
               <ImageCheckTab
-                tweetVideo={tweetVideo}
                 imageCheckResult={imageCheckResult}
+                videoDeepfakeResult={videoDeepfakeResult}
               />
             </TabsContent>
           </Tabs>

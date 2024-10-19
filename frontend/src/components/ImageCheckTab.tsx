@@ -1,33 +1,18 @@
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
-import { checkDeepfake } from "@/utils/factCheck"
 import { Loader2 } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 
 export default function ImageCheckCarousel({
-  tweetVideo,
-  imageCheckResult
+  imageCheckResult,
+  videoDeepfakeResult
 }: {
-  tweetVideo: HTMLVideoElement | null
   imageCheckResult: any[]
+  videoDeepfakeResult: number | null
 }) {
-  const [videoDeepfakeResult, setVideoDeepfakeResult] = useState<number | null>(
-    null
-  )
   const [currentIndex, setCurrentIndex] = useState(0)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const observerRef = useRef<IntersectionObserver | null>(null)
-
-  useEffect(() => {
-    ;(async () => {
-      tweetVideo.currentTime = 0
-      const stream = tweetVideo.captureStream()
-      const blob = await captureFirstFrame(stream)
-      const deepfakeResult = await checkDeepfake(blob)
-
-      setVideoDeepfakeResult(deepfakeResult.type.deepfake)
-    })()
-  }, [tweetVideo])
 
   const scrollToImage = useCallback((index: number) => {
     if (scrollContainerRef.current) {
@@ -181,23 +166,4 @@ const DeepfakeContentDetector = ({ percentage }) => {
       )}
     </div>
   )
-}
-
-function captureFirstFrame(stream: MediaStream) {
-  return new Promise((resolve, reject) => {
-    const video = document.createElement("video")
-    video.srcObject = stream
-
-    video.onloadedmetadata = () => {
-      video.play()
-      video.pause()
-      const canvas = document.createElement("canvas")
-      canvas.width = video.videoWidth
-      canvas.height = video.videoHeight
-      const ctx = canvas.getContext("2d")
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-      canvas.toBlob(resolve, "image/jpeg")
-    }
-    video.onerror = reject
-  })
 }

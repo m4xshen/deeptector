@@ -1,5 +1,6 @@
 import {
   checkClaim,
+  checkDeepfake,
   extractAllArticles,
   type FactCheckResponse
 } from "@/utils/factCheck"
@@ -23,7 +24,7 @@ export default function TweetOverlay({
   setIsLoading,
   setIsStreaming,
   setImageCheckResult,
-  onExtractVideo
+  setVideoDeepfakeResult
 }: {
   setIsExpanded: (isExpanded: boolean) => void
   tweetElement: Element
@@ -33,13 +34,15 @@ export default function TweetOverlay({
   setIsLoading: (isLoading: boolean) => void
   setIsStreaming: (isStreaming: boolean) => void
   setImageCheckResult: (result: any[]) => void
-  onExtractVideo: (video: any) => void
+  setVideoDeepfakeResult: (result: number | null) => void
 }) {
   const handleFactCheck = async () => {
     setIsExpanded(true)
     onResetSummary()
     setIsLoading(true)
     setIsStreaming(false)
+    setImageCheckResult([])
+    setVideoDeepfakeResult(null)
 
     const tweetText = extractTweetText(tweetElement)
     const tweetImages = extractTweetImages(tweetElement)
@@ -67,7 +70,16 @@ export default function TweetOverlay({
     })
 
     const tweetVideo = extractTweetVideos(tweetElement)
-    onExtractVideo(tweetVideo)
+
+    async function handleFactCheck() {
+      tweetVideo.currentTime = 0
+      const stream = tweetVideo.captureStream()
+      const blob = await captureFirstFrame(stream)
+      const deepfakeResult = await checkDeepfake(blob)
+
+      setVideoDeepfakeResult(deepfakeResult.type.deepfake)
+    }
+    handleFactCheck()
 
     const result = await checkClaim(tweetText)
     if (!result || Object.keys(result).length === 0) {
@@ -104,4 +116,23 @@ export default function TweetOverlay({
       </Button>
     </div>
   )
+}
+
+function captureFirstFrame(stream: MediaStream) {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement("video")
+    video.srcObject = stream
+
+    video.onloadedmetadata = () => {
+      video.play()
+      video.pause()
+      const canvas = document.createElement("canvas")
+      canvas.width = video.videoWidth
+      canvas.height = video.videoHeight
+      const ctx = canvas.getContext("2d")
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+      canvas.toBlob(resolve, "image/jpeg")
+    }
+    video.onerror = reject
+  })
 }
