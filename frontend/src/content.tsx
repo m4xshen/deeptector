@@ -27,7 +27,8 @@ const PlasmoOverlay = () => {
   const [isExpanded, setIsExpanded] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isStreaming, setIsStreaming] = useState(false)
-  const [tweetImages, setTweetImages] = useState<string[]>([])
+  const [imageCheckResult, setImageCheckResult] = useState([])
+
   const [tweetVideo, setTweetVideo] = useState<HTMLVideoElement | null>(null)
 
   const resetSummary = () => {
@@ -52,7 +53,7 @@ const PlasmoOverlay = () => {
             onResetSummary={resetSummary}
             setIsLoading={setIsLoading}
             setIsStreaming={setIsStreaming}
-            onExtractImages={(images) => setTweetImages(images)}
+            setImageCheckResult={setImageCheckResult}
             onExtractVideo={(video) => setTweetVideo(video)}
           />
         )
@@ -124,8 +125,8 @@ const PlasmoOverlay = () => {
             </TabsContent>
             <TabsContent value="image-check">
               <ImageCheckTab
-                tweetImages={tweetImages}
                 tweetVideo={tweetVideo}
+                imageCheckResult={imageCheckResult}
               />
             </TabsContent>
           </Tabs>

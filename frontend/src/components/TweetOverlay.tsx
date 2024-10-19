@@ -22,7 +22,7 @@ export default function TweetOverlay({
   onResetSummary,
   setIsLoading,
   setIsStreaming,
-  onExtractImages,
+  setImageCheckResult,
   onExtractVideo
 }: {
   setIsExpanded: (isExpanded: boolean) => void
@@ -32,7 +32,7 @@ export default function TweetOverlay({
   onResetSummary: () => void
   setIsLoading: (isLoading: boolean) => void
   setIsStreaming: (isStreaming: boolean) => void
-  onExtractImages: (images: string[]) => void
+  setImageCheckResult: (result: any[]) => void
   onExtractVideo: (video: any) => void
 }) {
   const handleFactCheck = async () => {
@@ -43,9 +43,30 @@ export default function TweetOverlay({
 
     const tweetText = extractTweetText(tweetElement)
     const tweetImages = extractTweetImages(tweetElement)
-    const tweetVideo = extractTweetVideos(tweetElement)
+    const imageCheckResult = []
 
-    onExtractImages(tweetImages)
+    Promise.all(
+      tweetImages.map(async (image, _) => {
+        try {
+          const response = await fetch(
+            `https://api.sightengine.com/1.0/check.json?models=genai&api_user=${process.env.PLASMO_PUBLIC_API_USER}&api_secret=${process.env.PLASMO_PUBLIC_API_SECRET}&url=${encodeURIComponent(image)}`
+          )
+          const data = await response.json()
+          const aiGeneratedScore =
+            data.status === "success" ? data.type.ai_generated : null
+          imageCheckResult.push({
+            url: image,
+            aiGeneratedScore
+          })
+        } catch (error) {
+          console.error("Error fetching AI data:", error)
+        }
+      })
+    ).then(() => {
+      setImageCheckResult(imageCheckResult)
+    })
+
+    const tweetVideo = extractTweetVideos(tweetElement)
     onExtractVideo(tweetVideo)
 
     const result = await checkClaim(tweetText)
