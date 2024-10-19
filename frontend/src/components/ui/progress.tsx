@@ -18,7 +18,7 @@ const Progress = React.forwardRef<
       {...props}
     />
     <div
-      className="absolute top-0 w-1 h-5 bg-black -mt-1"
+      className="absolute top-0 w-1 h-7 bg-black -mt-1"
       style={{ left: `calc(${value}% - 2px)` }}
     />
   </div>

@@ -153,9 +153,9 @@ const AIContentDetector = ({ percentage }) => {
         <span className="text-sm font-medium">真實</span>
         <span className="text-sm font-medium">AI</span>
       </div>
-      <Progress value={percentage} className="h-2" />
+      <Progress value={percentage} className="h-5" />
       {percentage >= 50 ? (
-        <Alert variant="destructive" className="bg-red-50 border-red-200">
+        <Alert className="bg-red-50 border-red-200">
           <AlertDescription>
             有 <strong>{percentage.toFixed(0)}%</strong> 的機率是AI生成
           </AlertDescription>
