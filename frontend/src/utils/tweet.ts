@@ -41,3 +41,7 @@ export const extractTweetImages = (tweetElement: Element): string[] => {
     })
     .filter((src): src is string => src !== null)
 }
+
+export const extractTweetVideos = (tweetElement: Element): Element => {
+  return tweetElement.querySelector("video")
+}

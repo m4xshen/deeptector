@@ -76,3 +76,27 @@ export async function checkClaim(
   console.log("No claims found even after AI reformulation")
   return null
 }
+
+export async function checkDeepfake(imageBlob) {
+  const formData = new FormData()
+  formData.append("media", imageBlob, "image.png")
+  formData.append("models", "deepfake")
+  formData.append("api_user", "1283281248")
+  formData.append("api_secret", "B3gFhFi3qHJi2N6VBuhCz6B4myMSUeEi")
+
+  try {
+    const response = await fetch("https://api.sightengine.com/1.0/check.json", {
+      method: "POST",
+      body: formData
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error("Error calling Sightengine API:", error)
+    throw error
+  }
+}

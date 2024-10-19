@@ -1,19 +1,35 @@
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
+import { checkDeepfake } from "@/utils/factCheck"
 import { Loader2 } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 
 export default function ImageCheckCarousel({
-  tweetImages
+  tweetImages,
+  tweetVideo
 }: {
   tweetImages: string[]
+  tweetVideo: HTMLVideoElement | null
 }) {
   const [imageData, setImageData] = useState<
     Array<{ url: string; aiGeneratedScore: number | null }>
   >([])
+  const [videoDeepfakeResult, setVideoDeepfakeResult] = useState<number | null>(
+    null
+  )
   const [currentIndex, setCurrentIndex] = useState(0)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const observerRef = useRef<IntersectionObserver | null>(null)
+
+  useEffect(() => {
+    ;(async () => {
+      const stream = tweetVideo.captureStream()
+      const blob = await captureFirstFrame(stream)
+      const deepfakeResult = await checkDeepfake(blob)
+
+      setVideoDeepfakeResult(deepfakeResult.type.deepfake)
+    })()
+  }, [tweetVideo])
 
   useEffect(() => {
     const fetchAiData = async () => {
@@ -91,57 +107,66 @@ export default function ImageCheckCarousel({
     }
   }, [imageData])
 
-  if (imageData.length === 0) {
-    return <div className="text-center py-4">沒有圖片</div>
-  }
-
   return (
     <div className="w-full max-w-md mx-auto">
-      <div
-        ref={scrollContainerRef}
-        className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide"
-        style={{
-          scrollSnapType: "x mandatory",
-          scrollBehavior: "smooth",
-          WebkitOverflowScrolling: "touch",
-          msOverflowStyle: "none",
-          scrollbarWidth: "none"
-        }}>
-        {imageData.map((image, index) => (
+      {imageData.length === 0 ? (
+        <div className="text-center py-4">沒有圖片</div>
+      ) : (
+        <>
           <div
-            key={index}
-            className="flex-shrink-0 w-full snap-center px-4 image-container"
-            data-index={index}>
-            <div className="aspect-square relative overflow-hidden mb-4">
-              <img
-                src={image.url}
-                alt={`Tweet image ${index + 1}`}
-                className="absolute w-full h-full object-cover rounded-lg"
-              />
-            </div>
-            <div className="text-center w-full mt-4">
-              {image.aiGeneratedScore === null ? (
-                <div className="flex justify-center items-center text-gray-500">
-                  <Loader2 className="animate-spin mr-2" />
+            ref={scrollContainerRef}
+            className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide"
+            style={{
+              scrollSnapType: "x mandatory",
+              scrollBehavior: "smooth",
+              WebkitOverflowScrolling: "touch",
+              msOverflowStyle: "none",
+              scrollbarWidth: "none"
+            }}>
+            {imageData.map((image, index) => (
+              <div
+                key={index}
+                className="flex-shrink-0 w-full snap-center px-4 image-container"
+                data-index={index}>
+                <div className="aspect-square relative overflow-hidden mb-4">
+                  <img
+                    src={image.url}
+                    alt={`Tweet image ${index + 1}`}
+                    className="absolute w-full h-full object-cover rounded-lg"
+                  />
                 </div>
-              ) : (
-                <AIContentDetector percentage={image.aiGeneratedScore * 100} />
-              )}
-            </div>
+                <div className="text-center w-full mt-4">
+                  {image.aiGeneratedScore === null ? (
+                    <div className="flex justify-center items-center text-gray-500">
+                      <Loader2 className="animate-spin mr-2" />
+                    </div>
+                  ) : (
+                    <AIContentDetector
+                      percentage={image.aiGeneratedScore * 100}
+                    />
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
-      <div className="flex justify-center mt-4 space-x-2">
-        {imageData.map((_, index) => (
-          <button
-            key={index}
-            className={`w-2 h-2 rounded-full ${
-              index === currentIndex ? "bg-black" : "bg-gray-300"
-            }`}
-            onClick={() => scrollToImage(index)}
-          />
-        ))}
-      </div>
+          <div className="flex justify-center mt-4 space-x-2">
+            {imageData.map((_, index) => (
+              <button
+                key={index}
+                className={`w-2 h-2 rounded-full ${
+                  index === currentIndex ? "bg-black" : "bg-gray-300"
+                }`}
+                onClick={() => scrollToImage(index)}
+              />
+            ))}
+          </div>
+        </>
+      )}
+      {videoDeepfakeResult && (
+        <div className="mt-4">
+          這個影片有 <strong>{videoDeepfakeResult * 100}%</strong> 是 deepfake
+        </div>
+      )}
     </div>
   )
 }
@@ -169,4 +194,22 @@ const AIContentDetector = ({ percentage }) => {
       )}
     </div>
   )
+}
+
+function captureFirstFrame(stream: MediaStream) {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement("video")
+    video.srcObject = stream
+    video.onloadedmetadata = () => {
+      video.play()
+      video.pause()
+      const canvas = document.createElement("canvas")
+      canvas.width = video.videoWidth
+      canvas.height = video.videoHeight
+      const ctx = canvas.getContext("2d")
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+      canvas.toBlob(resolve, "image/jpeg")
+    }
+    video.onerror = reject
+  })
 }

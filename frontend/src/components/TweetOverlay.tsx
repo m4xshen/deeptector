@@ -4,7 +4,11 @@ import {
   type FactCheckResponse
 } from "@/utils/factCheck"
 import { openai } from "@/utils/openai"
-import { extractTweetImages, extractTweetText } from "@/utils/tweet"
+import {
+  extractTweetImages,
+  extractTweetText,
+  extractTweetVideos
+} from "@/utils/tweet"
 import { streamText } from "ai"
 import React from "react"
 
@@ -18,7 +22,8 @@ export default function TweetOverlay({
   onResetSummary,
   setIsLoading,
   setIsStreaming,
-  onExtractImages
+  onExtractImages,
+  onExtractVideo
 }: {
   setIsExpanded: (isExpanded: boolean) => void
   tweetElement: Element
@@ -28,6 +33,7 @@ export default function TweetOverlay({
   setIsLoading: (isLoading: boolean) => void
   setIsStreaming: (isStreaming: boolean) => void
   onExtractImages: (images: string[]) => void
+  onExtractVideo: (video: any) => void
 }) {
   const handleFactCheck = async () => {
     setIsExpanded(true)
@@ -37,7 +43,10 @@ export default function TweetOverlay({
 
     const tweetText = extractTweetText(tweetElement)
     const tweetImages = extractTweetImages(tweetElement)
+    const tweetVideo = extractTweetVideos(tweetElement)
+
     onExtractImages(tweetImages)
+    onExtractVideo(tweetVideo)
 
     const result = await checkClaim(tweetText)
     if (!result || Object.keys(result).length === 0) {
