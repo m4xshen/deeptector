@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 import face_alignment
 from os.path import join
-import utils.shared as shared
+from ..utils import shared
 from datetime import datetime
 import torch
 # from .deprecated import track_bidirectional, landmark_align  # DEPRECATED codes, just for reference.

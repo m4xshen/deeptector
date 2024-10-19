@@ -3,20 +3,20 @@ import os
 import sys
 import numpy as np
 import cv2
-from os.path import join
 import torch
 from tqdm import tqdm
-# Avoid errors when directly run this script from './demo'
-project_root = pathlib.Path(__file__).parent.parent.as_posix()
-sys.path.extend([project_root])
-import utils.shared as shared
-from utils.landmark_utils import detect_frames_track
-from utils.model import LRNet
 from collections import Counter
 
+# 添加项目根目录到 Python 路径
+project_root = pathlib.Path(__file__).parent.parent.parent.parent.as_posix()
+sys.path.append(project_root)
 
-def detect_track(input_path, video):
-    vidcap = cv2.VideoCapture(join(input_path, video))
+from models.LRNetModel.utils import shared
+from models.LRNetModel.utils.landmark_utils import detect_frames_track
+from models.LRNetModel.utils.model import LRNet
+
+def detect_track(video_path):
+    vidcap = cv2.VideoCapture(video_path)
     fps = vidcap.get(cv2.CAP_PROP_FPS)
     frames = []
     while True:
@@ -26,50 +26,35 @@ def detect_track(input_path, video):
         else:
             break
 
-    raw_data = detect_frames_track(frames, video, fps)
+    raw_data = detect_frames_track(frames, os.path.basename(video_path), fps)
     vidcap.release()
     return np.array(raw_data)
 
-
-def get_data_from_videos(input_path, block):
-    """
-    This function extracts landmarks from videos and directly returns the data for classification.
-    """
-    videos = os.listdir(input_path)
-    videos.sort()
-
+def get_data_from_video(video_path, block):
     x = []
     x_diff = []
     sample_to_video = []
 
     print("Extracting landmarks and loading data...")
-    for video in tqdm(videos):
-        if video.startswith('.'):
-            continue
+    video_name = os.path.basename(video_path).split('.')[0]
+    print(f"Processing video: {video_name}")
 
-        video_name = video.split('.')[0]
-        print(f"Processing video: {video}")
+    raw_data = detect_track(video_path)
 
-        # Extract landmarks
-        raw_data = detect_track(input_path, video)
+    if len(raw_data) == 0:
+        print(f"No face detected in {video_name}")
+        return np.array([]), np.array([]), np.array([])
 
-        if len(raw_data) == 0:
-            print(f"No face detected in {video}")
-            continue
-
-        # Process data for classification
-        for i in range(0, raw_data.shape[0] - block, block):
-            vec = raw_data[i:i + block, :]
-            x.append(vec)
-            vec_next = raw_data[i + 1:i + block, :]
-            vec_next = np.pad(vec_next, ((0, 1), (0, 0)), 'constant', constant_values=(0, 0))
-            vec_diff = (vec_next - vec)[:block - 1, :]
-            x_diff.append(vec_diff)
-
-            sample_to_video.append(video_name)
+    for i in range(0, raw_data.shape[0] - block, block):
+        vec = raw_data[i:i + block, :]
+        x.append(vec)
+        vec_next = raw_data[i + 1:i + block, :]
+        vec_next = np.pad(vec_next, ((0, 1), (0, 0)), 'constant', constant_values=(0, 0))
+        vec_diff = (vec_next - vec)[:block - 1, :]
+        x_diff.append(vec_diff)
+        sample_to_video.append(video_name)
 
     return np.array(x), np.array(x_diff), np.array(sample_to_video)
-
 
 def predict(model, sample, device):
     model.to(device)
@@ -80,15 +65,10 @@ def predict(model, sample, device):
     return predictions
 
 def merge_video_prediction(mix_prediction, s2v, vc):
-    """
-    This function merges predictions from multiple samples in a video and returns the overall prediction for each video.
-    """
     prediction_video = []
     pre_count = {}
     for p, v_label in zip(mix_prediction, s2v):
-        p_bi = 0
-        if p >= 0.5:
-            p_bi = 1
+        p_bi = 1 if p >= 0.5 else 0
         if v_label in pre_count:
             pre_count[v_label] += p_bi
         else:
@@ -97,21 +77,15 @@ def merge_video_prediction(mix_prediction, s2v, vc):
         prediction_video.append(pre_count[key] / vc[key])
     return prediction_video
 
+def classify_video(video_path, block_size):
+    test_samples, test_samples_diff, test_sv = get_data_from_video(video_path, block_size)
 
-def classify_videos(input_path, block_size):
-    """
-    This function classifies videos in the input path and returns the prediction results.
+    if len(test_samples) == 0:
+        return {"video": os.path.basename(video_path), "label": "Unknown", "score": 0}
 
-    :param input_path: Path to the directory containing videos to
-    :param block_size: Number of frames to be used for classification
-    :return: List of prediction results for each video
-
-    """
-    test_samples, test_samples_diff, test_sv = get_data_from_videos(input_path, block_size)
-
-    weights_g1 = './model_weights/g1.pth'  # Path to G1 model weights
-    weights_g2 = './model_weights/g2.pth'  # Path to G2 model weights
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'  # Device to run the model on
+    weights_g1 = os.path.join(os.path.dirname(__file__), 'model_weights', 'g1.pth')
+    weights_g2 = os.path.join(os.path.dirname(__file__), 'model_weights', 'g2.pth')
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     g1 = LRNet()
     g2 = LRNet()
@@ -132,28 +106,20 @@ def classify_videos(input_path, block_size):
 
     video_count = Counter(test_sv)
 
-    # Merge predictions for each video
     prediction_video = merge_video_prediction(mix_predict, test_sv, video_count)
 
-    print("\n\n", "#----Prediction Results----#")
-    video_names = list(video_count.keys())
-    for i, pd in enumerate(prediction_video):
-        if pd >= 0.5:
-            label = "Fake"
-        else:
-            label = "Real"
-        print(f"{video_names[i]} - Prediction label: {label}; Score: {pd}")
-    print("#------------End------------#")
+    video_name = os.path.basename(video_path)
+    score = prediction_video[0] if prediction_video else 0
+    label = "Fake" if score >= 0.5 else "Real"
 
-    prediction_video = [{"video": video_names[i], "label": "Fake" if prediction_video[i] >= 0.5 else "Real", "score": prediction_video[i]} for i in range(len(prediction_video))]
+    result = {"video": video_name, "label": label, "score": score}
     
-    return prediction_video
+    return result
 
 if __name__ == "__main__":
-    # input_path = './test_video/'
-    input_path = './input/'
+    video_path = './input/test_video.mp4'
     block_size = 16
 
-    result = classify_videos(input_path, block_size)
+    result = classify_video(video_path, block_size)
 
     print(result)

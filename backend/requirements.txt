@@ -5,3 +5,17 @@ beautifulsoup4
 newspaper3k
 lxml[html_clean]
 cloudscraper
+uuid
+
+requests
+tqdm
+bs4
+
+python-multipart
+torch
+numpy
+tqdm
+opencv-python
+scikit-learn
+face-alignment
+pyyaml

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import logging
-from routes import contentRoute 
+from routes import contentRoute, videoRoute
 
 app = FastAPI()
 
@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app.include_router(contentRoute.router, prefix="/api")
-
+app.include_router(videoRoute.router, prefix="/api")
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
