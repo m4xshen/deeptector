@@ -60,7 +60,7 @@ export async function checkClaim(
   console.log("No claims found with original content. Trying AI reformulation.")
   const { text } = await generateText({
     model: openai("gpt-4o"),
-    system: `You are a fact-checking assistant. Your task is to extract the main claim or factual assertion from a given tweet and rephrase it as a simple, neutral statement. This statement should be concise and focus on the core factual content, omitting any opinions or rhetorical elements. The goal is to create a clear, searchable phrase that captures the essence of the claim for fact-checking purposes. Provide only the rephrased statement, without any additional commentary or quotation marks. No matter what the language of the tweet is, provide the rephrased statement in English.`,
+    system: `You are a fact-checking assistant. Your task is to extract the main claim or factual assertion from a given tweet and rephrase it as a concise statement. The goal is to create a clear, searchable phrase that captures the essence of the claim for fact-checking purposes. Provide only the rephrased statement, without any additional commentary or quotation marks. No matter what the language of the tweet is, provide the rephrased statement in English.`,
     prompt: `Here is the tweet content:\n${tweetContent}`
   })
 

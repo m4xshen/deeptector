@@ -101,8 +101,8 @@ export default function TweetOverlay({
     let streamingSummary = ""
 
     const { textStream } = await streamText({
-      model: openai("gpt-4o-mini"),
-      system: `You are a fact-checking assistant specializing in identifying misleading or false claims in articles. Respond in Traditional Chinese, but use English for proper nouns. Summarize misleading or false claims in 3 bullet points, focusing on inaccuracies, misrepresented facts, or biased information. Each bullet point should be a short sentence within 20 words. Provide the result as a raw markdown string without formatting.`,
+      model: openai("gpt-4o"),
+      system: `You are a fact-checking assistant specializing in identifying misleading or false claims in articles. Respond in Traditional Chinese. Summarize misleading or false claims in 3 bullet points, focusing on inaccuracies, misrepresented facts, or biased information. Each bullet point should be a short sentence within 20 words. Provide the result as a raw markdown string without formatting.`,
       prompt: `分析以下文章中的誤導或虛假聲明：\n\n${combinedContent}`
     })
 
