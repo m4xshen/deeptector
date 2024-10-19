@@ -116,7 +116,7 @@ export async function extractContent(
 ): Promise<{ content: string }> {
   try {
     const response = await fetch(
-      "https://deeptector.onrender.com/api/extract",
+      `${process.env.PLASMO_PUBLIC_BACKEND_URL}/api/extract`,
       {
         method: "POST",
         headers: {
