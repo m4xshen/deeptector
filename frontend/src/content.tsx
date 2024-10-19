@@ -5,6 +5,7 @@ import "@/style.css"
 
 import { Close, MagnifyingGlass } from "@/components/Icons"
 import TweetOverlay from "@/components/TweetOverlay"
+import { Skeleton } from "@/components/ui/skeleton"
 import { type FactCheckResponse } from "@/utils/factCheck"
 import React, { useEffect, useState } from "react"
 import { createRoot } from "react-dom/client"
@@ -24,6 +25,8 @@ const PlasmoOverlay = () => {
   >("")
   const [streamingSummary, setStreamingSummary] = useState("")
   const [isExpanded, setIsExpanded] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isStreaming, setIsStreaming] = useState(false)
 
   const resetSummary = () => {
     setStreamingSummary("")
@@ -45,6 +48,8 @@ const PlasmoOverlay = () => {
             onFactCheck={setFactCheckResult}
             onStreamingSummary={setStreamingSummary}
             onResetSummary={resetSummary}
+            setIsLoading={setIsLoading}
+            setIsStreaming={setIsStreaming}
           />
         )
       })
@@ -76,6 +81,21 @@ const PlasmoOverlay = () => {
     return `https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://${domain}&size=128`
   }
 
+  const FactCheckSkeleton = () => (
+    <div className="space-y-4">
+      <Skeleton className="h-24 w-full" />
+      <Skeleton className="h-24 w-full" />
+    </div>
+  )
+
+  const StreamingSkeleton = () => (
+    <div className="space-y-2">
+      <Skeleton className="h-4 w-[80%]" />
+      <Skeleton className="h-4 w-[60%]" />
+      <Skeleton className="h-4 w-[70%]" />
+    </div>
+  )
+
   return (
     <div
       className={`fixed top-5 right-5 bg-white text-black rounded-lg transition-all duration-300 ease-in-out ${
@@ -101,7 +121,9 @@ const PlasmoOverlay = () => {
               </TabsTrigger>
             </TabsList>
             <TabsContent value="fact-check">
-              {typeof factCheckResult === "string" ? (
+              {isLoading ? (
+                <FactCheckSkeleton />
+              ) : typeof factCheckResult === "string" ? (
                 <div>{factCheckResult}</div>
               ) : (
                 <div className="flex flex-col gap-2">
@@ -112,7 +134,7 @@ const PlasmoOverlay = () => {
                         onClick={() =>
                           window.open(claim.claimReview[0].url, "_blank")
                         }
-                        className="cursor-pointer hover:bg-gray-100 transition-colors duration-200">
+                        className="cursor-pointer hover:bg-gray-100 transition-colors duration-200 h-24">
                         <CardHeader className="flex flex-row items-center gap-5">
                           <img
                             src={getOgImage(claim.claimReview[0].url)}
@@ -134,11 +156,16 @@ const PlasmoOverlay = () => {
                         </CardHeader>
                       </Card>
                     ))}
-                  {streamingSummary && (
-                    <div className="mt-4 border-t pt-2 prose">
-                      <Markdown>{streamingSummary}</Markdown>
-                    </div>
-                  )}
+
+                  <div className="mt-4 border-t pt-2 prose">
+                    {isStreaming && streamingSummary === "" ? (
+                      <StreamingSkeleton />
+                    ) : (
+                      streamingSummary && (
+                        <Markdown>{streamingSummary}</Markdown>
+                      )
+                    )}
+                  </div>
                 </div>
               )}
             </TabsContent>
