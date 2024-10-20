@@ -3,6 +3,8 @@ import { Progress } from "@/components/ui/progress"
 import { Loader2 } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 
+import { Skeleton } from "./ui/skeleton"
+
 export default function ImageCheckCarousel({
   imageCheckResult,
   videoDeepfakeResult
@@ -112,7 +114,13 @@ export default function ImageCheckCarousel({
         </div>
       </>
       {videoDeepfakeResult && (
-        <DeepfakeContentDetector percentage={videoDeepfakeResult * 100} />
+        <>
+          {videoDeepfakeResult === -1 ? (
+            <Skeleton className="h-24 w-full" />
+          ) : (
+            <DeepfakeContentDetector percentage={videoDeepfakeResult * 100} />
+          )}
+        </>
       )}
     </div>
   )

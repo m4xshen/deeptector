@@ -49,9 +49,6 @@ export default function TweetOverlay({
     const tweetImages = extractTweetImages(tweetElement)
     const imageCheckResult = []
 
-    // const tweetId = extractTweetId(tweetElement)
-    // console.log("Tweet ID:", tweetId)
-
     Promise.all(
       tweetImages.map(async (image, _) => {
         try {
@@ -76,6 +73,7 @@ export default function TweetOverlay({
     const tweetVideo = extractTweetVideos(tweetElement)
 
     async function handleFactCheck() {
+      setVideoDeepfakeResult(-1)
       tweetVideo.currentTime = 0
       const stream = tweetVideo.captureStream()
       const blob = await captureFirstFrame(stream)
@@ -83,7 +81,10 @@ export default function TweetOverlay({
 
       setVideoDeepfakeResult(deepfakeResult.type.deepfake)
     }
-    handleFactCheck()
+
+    if (tweetVideo) {
+      handleFactCheck()
+    }
 
     const result = await checkClaim(tweetText)
     if (!result || Object.keys(result).length === 0) {
